@@ -2,30 +2,21 @@ package raindrops
 
 import (
 	"strconv"
-	"strings"
 )
 
 func Convert(number int) string {
-	resule := make([]string, 3)
-	// switch number := number; {
-	// case number%3 == 0:
-	// 	resule = append(resule, "Pling")
-	// case number%5 == 0:
-	// 	resule = append(resule, "Pling")
-	// case number%7 == 0:
-	// 	resule = append(resule, "Plong")
-	// }
+	resule := ""
 	if number%3 == 0 {
-		resule = append(resule, "Pling")
+		resule += "Pling"
 	}
 	if number%5 == 0 {
-		resule = append(resule, "Plang")
+		resule += "Plang"
 	}
 	if number%7 == 0 {
-		resule = append(resule, "Plong")
+		resule += "Plong"
 	}
 	if !(number%3 == 0 || number%5 == 0 || number%7 == 0) {
-		resule = append(resule, strconv.Itoa(number))
+		resule += strconv.Itoa(number)
 	}
-	return strings.Join(resule, "")
+	return resule
 }
