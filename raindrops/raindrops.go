@@ -5,18 +5,17 @@ import (
 )
 
 func Convert(number int) string {
-	resule := ""
-	if number%3 == 0 {
-		resule += "Pling"
+	result := ""
+	conditions := [...]map[int]string{{3: "Pling"}, {5: "Plang"}, {7: "Plong"}}
+	for _, value := range conditions {
+		for key, val := range value {
+			if number%key == 0 {
+				result += val
+			}
+		}
 	}
-	if number%5 == 0 {
-		resule += "Plang"
+	if result == "" {
+		result += strconv.Itoa(number)
 	}
-	if number%7 == 0 {
-		resule += "Plong"
-	}
-	if !(number%3 == 0 || number%5 == 0 || number%7 == 0) {
-		resule += strconv.Itoa(number)
-	}
-	return resule
+	return result
 }
