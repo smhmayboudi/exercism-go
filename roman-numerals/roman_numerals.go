@@ -3,7 +3,6 @@ package romannumerals
 import "math"
 
 func ToRomanNumeral(input int) (string, error) {
-	panic("Please implement the ToRomanNumeral function")
 	romans := map[int]string{
 		1000: "M",
 		900:  "CM",
