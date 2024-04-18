@@ -1,7 +1,6 @@
 package pangram
 
 func IsPangram(input string) bool {
-	// const alphamask int = 0b11111111111111111111111111
 	// result := 0
 	// length := len(input)
 	// for i := 0; i < length; i++ {
@@ -12,9 +11,8 @@ func IsPangram(input string) bool {
 	// 		result |= 1 << (value - 65)
 	// 	}
 	// }
-	// return alphamask&result == alphamask
+	// return result == 0b11111111111111111111111111
 
-	const alphamask int = 0b11111111111111111111111111
 	result := 0
 	for _, value := range input {
 		if value > 96 && value < 123 {
@@ -23,5 +21,5 @@ func IsPangram(input string) bool {
 			result |= 1 << (value - 65)
 		}
 	}
-	return alphamask&result == alphamask
+	return result == 0b11111111111111111111111111
 }
