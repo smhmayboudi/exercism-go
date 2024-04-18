@@ -7,13 +7,14 @@ import (
 func IsPangram(input string) bool {
 	result := uint32(0)
 	for _, value := range strings.ToLower(input) {
-		if value == ' ' || value == '_' || value == '.' || value == '"' || ('0' <= value && value <= '9') {
+		switch value := value; {
+		case value == ' ', value == '_', value == '.', value == '"', '0' <= value && value <= '9':
 			continue
-		}
-		if value < 'a' || 'z' < value {
+		case value < 'a' || 'z' < value:
 			return false
+		default:
+			result |= 1 << (value - 'a')
 		}
-		result |= 1 << (value - 'a')
 	}
 	return result == 0x3ffffff
 }
