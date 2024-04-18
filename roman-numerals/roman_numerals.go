@@ -1,8 +1,14 @@
 package romannumerals
 
-import "math"
+import (
+	"errors"
+	"math"
+)
 
 func ToRomanNumeral(input int) (string, error) {
+	if input < 1 || 3999 < input {
+		return "", errors.New("error")
+	}
 	romans := map[int]string{
 		1000: "M",
 		900:  "CM",
