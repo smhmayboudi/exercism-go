@@ -2,7 +2,6 @@ package romannumerals
 
 import (
 	"errors"
-	"math"
 )
 
 func ToRomanNumeral(input int) (string, error) {
@@ -26,11 +25,10 @@ func ToRomanNumeral(input int) (string, error) {
 	}
 	res := ""
 	for index, value := range romans {
-		max := int(math.Floor(float64(input / index)))
-		for i := 0; i < max; i++ {
+		for input < index {
 			res += value
+			input -= index
 		}
-		input -= index * max
 	}
 	return res, nil
 }
