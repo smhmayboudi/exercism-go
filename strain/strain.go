@@ -7,21 +7,18 @@ package strain
 // them here: https://go.dev/tour/generics/1
 
 func Keep[T any](cp []T, predicate func(T) bool) []T {
-	var finalList []T
-	for _, v := range cp {
-		if predicate(v) {
-			finalList = append(finalList, v)
+	if cp == nil {
+		return cp
+	}
+	output := make([]T, 0, len(cp))
+	for _, value := range cp {
+		if predicate(value) {
+			output = append(output, value)
 		}
 	}
-	return finalList
+	return output
 }
 
 func Discard[T any](cp []T, predicate func(T) bool) []T {
-	var finalList []T
-	for _, v := range cp {
-		if !predicate(v) {
-			finalList = append(finalList, v)
-		}
-	}
-	return finalList
+	return Keep(cp, func(val T) bool { return !predicate(val) })
 }
