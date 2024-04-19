@@ -1,17 +1,15 @@
 package rotationalcipher
 
-func RotationalCipher(plain string, shiftKey int) string {
-	if shiftKey < 1 || 25 < shiftKey {
-		return plain
-	}
-	newPlain := []rune(plain)
-	for i := 0; i < len(newPlain); i++ {
-		if 'a' <= newPlain[i] && newPlain[i] <= 'z' {
-			newPlain[i] = 'a' + (newPlain[i]-'a'+rune(shiftKey))%26
+import "strings"
+
+func RotationalCipher(input string, shift int) string {
+	return strings.Map(func(r rune) rune {
+		switch {
+		case r >= 'A' && r <= 'Z':
+			return 'A' + (r-'A'+rune(shift))%26
+		case r >= 'a' && r <= 'z':
+			return 'a' + (r-'a'+rune(shift))%26
 		}
-		if 'A' <= newPlain[i] && newPlain[i] <= 'Z' {
-			newPlain[i] = 'A' + (newPlain[i]-'A'+rune(shiftKey))%26
-		}
-	}
-	return string(newPlain)
+		return r
+	}, input)
 }
