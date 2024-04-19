@@ -1,7 +1,5 @@
 package rotationalcipher
 
-import "fmt"
-
 func RotationalCipher(plain string, shiftKey int) string {
 	if shiftKey < 1 || 25 < shiftKey {
 		return plain
@@ -13,15 +11,18 @@ func RotationalCipher(plain string, shiftKey int) string {
 			continue
 		}
 		check1 := check0 + rune(shiftKey)
-		a, b, c, d := 'a', 'z', 'A', 'Z'
-		fmt.Println(a, b, c, d)
-		if ('a' <= check0 && check0 <= 'z') ||
-			('A' <= check0 && check0 <= 'Z') {
-			if ('a' <= check0 && check0 <= 'z' && 'a' <= check1 && check1 <= 'z') ||
-				('A' <= check0 && check0 <= 'Z' && 'A' <= check1 && check1 <= 'Z') {
-				newPlain[i] = check1
+		if 'a' <= check0 && check0 <= 'z' {
+			if check1 > 'z' {
+				newPlain[i] = check1 - rune(26)
 			} else {
-				newPlain[i] = newPlain[i] - rune(shiftKey)
+				newPlain[i] = check1
+			}
+		}
+		if 'A' <= check0 && check0 <= 'Z' {
+			if check1 > 'Z' {
+				newPlain[i] = check1 - rune(26)
+			} else {
+				newPlain[i] = check1
 			}
 		}
 	}
