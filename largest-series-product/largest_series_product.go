@@ -1,19 +1,29 @@
 package lsproduct
 
-import "sort"
+import "fmt"
 
-func LargestSeriesProduct(digits string, span int) (int64, error) {
-	runes := []rune(digits)
-	mem := map[int]string{}
-	for i := 0; i < len(runes)/3; i++ {
-		key := int(digits[i+0]) * int(digits[i+1]) * int(digits[i+2])
-		value := digits[i : i+span]
-		mem[key] = value
+func LargestSeriesProduct(digits string, span int) (product int64, err error) {
+	if span < 0 {
+		return 0, fmt.Errorf("span is negative: %d", span)
 	}
-	keys := make([]int, 0, len(mem))
-	for k := range mem {
-		keys = append(keys, k)
+	if len(digits) < span {
+		return 0, fmt.Errorf("len(%s) < span: %d < %d", digits, len(digits), span)
 	}
-	sort.Ints(keys)
-	return int64(keys[0]), nil
+	digitsArray := make([]int64, len(digits))
+	for index, digit := range digits {
+		if digit < '0' || digit > '9' {
+			return 0, fmt.Errorf("input %q contains non-digits", digits)
+		}
+		digitsArray[index] = int64(digit - '0')
+	}
+	for index, last := 0, len(digitsArray)-span+1; index < last; index++ {
+		currentProduct := int64(1)
+		for _, digit := range digitsArray[index : index+span] {
+			currentProduct *= digit
+		}
+		if currentProduct > product {
+			product = currentProduct
+		}
+	}
+	return
 }
