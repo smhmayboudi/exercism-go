@@ -3,12 +3,17 @@ package atbash
 import "strings"
 
 func Atbash(s string) string {
-	return strings.Map(func(r rune) rune {
-		if 'a' <= r && r <= 'z' {
-			return []rune("zyxwvutsrqponmlkjihgfedcba")[r-'a']
-		} else if 'A' <= r && r <= 'Z' {
-			return []rune("zyxwvutsrqponmlkjihgfedcba")[r-'A']
+	var buf strings.Builder
+	var cipher = []rune("zyxwvutsrqponmlkjihgfedcba")
+	for _, c := range strings.ToLower(s) {
+		if 'a' <= c && c <= 'z' {
+			buf.WriteRune(cipher[c-'a'])
+		} else if '0' <= c && c <= '9' {
+			buf.WriteRune(c)
 		}
-		return r
-	}, s)
+		if buf.Len()%6 == 5 {
+			buf.WriteRune(' ')
+		}
+	}
+	return strings.TrimSpace(buf.String())
 }

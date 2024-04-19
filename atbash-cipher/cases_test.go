@@ -38,7 +38,8 @@ var testCases = []struct {
 		description: "encode deep thought",
 		phrase:      "Truth is fiction.",
 		expected:    "gifgs rhurx grlm",
-	}, {
+	},
+	{
 		description: "encode all the letters",
 		phrase:      "The quick brown fox jumps over the lazy dog.",
 		expected:    "gsvjf rxpyi ldmul cqfnk hlevi gsvoz abwlt",
