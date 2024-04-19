@@ -6,24 +6,11 @@ func RotationalCipher(plain string, shiftKey int) string {
 	}
 	newPlain := []rune(plain)
 	for i := 0; i < len(newPlain); i++ {
-		check0 := newPlain[i]
-		if check0 == ' ' {
-			continue
+		if 'a' <= newPlain[i] && newPlain[i] <= 'z' {
+			newPlain[i] = 'a' + (newPlain[i]-'a'+rune(shiftKey))%26
 		}
-		check1 := check0 + rune(shiftKey)
-		if 'a' <= check0 && check0 <= 'z' {
-			if check1 > 'z' {
-				newPlain[i] = check1 - rune(26)
-			} else {
-				newPlain[i] = check1
-			}
-		}
-		if 'A' <= check0 && check0 <= 'Z' {
-			if check1 > 'Z' {
-				newPlain[i] = check1 - rune(26)
-			} else {
-				newPlain[i] = check1
-			}
+		if 'A' <= newPlain[i] && newPlain[i] <= 'Z' {
+			newPlain[i] = 'A' + (newPlain[i]-'A'+rune(shiftKey))%26
 		}
 	}
 	return string(newPlain)
