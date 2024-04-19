@@ -2,15 +2,14 @@ package protein
 
 import (
 	"errors"
-	"fmt"
 )
 
 func FromRNA(rna string) ([]string, error) {
 	s := []rune(rna)
-	le := len(s) / 3
+	le := len(s)
 	res := []string{}
-	for i := 0; i < le; i++ {
-		str, err := FromCodon(fmt.Sprintf("%c%c%c", s[3*i+0], s[3*i+1], s[3*i+2]))
+	for i := 0; i < le; i = i + 3 {
+		str, err := FromCodon(rna[i : i+3])
 		if err != nil {
 			if err == ErrStop {
 				break
