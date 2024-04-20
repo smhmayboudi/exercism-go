@@ -1,25 +1,18 @@
 package sieve
 
 func Sieve(limit int) []int {
-	cap := limit - 1
-	strNum := 2
-	primes := make(map[int]bool, cap)
-	for i := 0; i < cap; i++ {
-		if primes[i] {
-			continue
-		} else {
-			primes[i] = false
-		}
-		currentNumber := i + strNum
-		for j := currentNumber; j < cap; j = j + currentNumber {
-			primes[j] = true
-		}
-	}
-	res := []int{}
-	for i, v := range primes {
-		if !v {
-			res = append(res, i+strNum)
+	composite := make([]bool, limit+1)
+	primes := make([]int, limit/2)
+	primeIndex := 0
+
+	for number := 2; number <= limit; number++ {
+		if !composite[number] {
+			primes[primeIndex] = number
+			primeIndex++
+			for idx := number + number; idx <= limit; idx += number {
+				composite[idx] = true
+			}
 		}
 	}
-	return res
+	return primes[:primeIndex]
 }
