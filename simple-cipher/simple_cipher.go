@@ -37,7 +37,9 @@ func NewShift(distance int) Cipher {
 func (c shift) Encode(input string) string {
 	var sb strings.Builder
 	sb.Grow(len(input))
-	for _, r := range strings.ToLower(input) {
+	in := []rune(strings.ToLower(input))
+	for i := 0; i < len(in); i++ {
+		r := in[i]
 		if 'a' <= r && r <= 'z' {
 			sb.WriteRune(shiftRune(r, c.distance))
 		}
@@ -48,7 +50,9 @@ func (c shift) Encode(input string) string {
 func (c shift) Decode(input string) string {
 	var sb strings.Builder
 	sb.Grow(len(input))
-	for _, r := range strings.ToLower(input) {
+	in := []rune(strings.ToLower(input))
+	for i := 0; i < len(in); i++ {
+		r := in[i]
 		if 'a' <= r && r <= 'z' {
 			sb.WriteRune(shiftRune(r, 26-c.distance))
 		}
@@ -66,7 +70,10 @@ func NewVigenere(key string) Cipher {
 	}
 	var valid bool = false
 	distances := make([]int, 0, len(key))
-	for _, r := range key {
+
+	in := []rune(key)
+	for i := 0; i < len(in); i++ {
+		r := in[i]
 		if r < 'a' || 'z' < r {
 			valid = false
 			break
@@ -88,7 +95,9 @@ func (v vigenere) Encode(input string) string {
 	var sb strings.Builder
 	sb.Grow(len(input))
 	idx := 0
-	for _, r := range strings.ToLower(input) {
+	in := []rune(strings.ToLower(input))
+	for i := 0; i < len(in); i++ {
+		r := in[i]
 		if 'a' <= r && r <= 'z' {
 			sb.WriteRune(shiftRune(r, v.distances[idx%len(v.distances)]))
 			idx++
@@ -101,7 +110,9 @@ func (v vigenere) Decode(input string) string {
 	var sb strings.Builder
 	sb.Grow(len(input))
 	idx := 0
-	for _, r := range strings.ToLower(input) {
+	in := []rune(strings.ToLower(input))
+	for i := 0; i < len(in); i++ {
+		r := in[i]
 		if 'a' <= r && r <= 'z' {
 			sb.WriteRune(shiftRune(r, -v.distances[idx%len(v.distances)]))
 			idx++
