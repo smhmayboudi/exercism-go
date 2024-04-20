@@ -1,15 +1,11 @@
 package prime
 
-func Factors(n int64) []int64 {
-	factors := []int64{}
-	i := int64(2)
-	for n > 1 {
-		if n%i == 0 {
-			factors = append(factors, i)
-			n /= i
-		} else {
-			i++
+func Factors(i int64) []int64 {
+	var o = []int64{}
+	for divisor := int64(2); i > 1; divisor++ {
+		for ; i%divisor == 0; i /= divisor {
+			o = append(o, divisor)
 		}
 	}
-	return factors
+	return o
 }
