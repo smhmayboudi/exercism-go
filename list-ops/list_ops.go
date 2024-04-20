@@ -1,7 +1,5 @@
 package listops
 
-import "slices"
-
 // IntList is an abstraction of a list of integers which we can define methods on
 type IntList []int
 
@@ -53,6 +51,10 @@ func (s IntList) Append(lst IntList) IntList {
 }
 
 func (s IntList) Concat(lists []IntList) IntList {
-	a := slices.Concat(lists...)
-	return s.Append(a)
+	f := make(IntList, 0, len(s)*len(lists))
+	f = append(f, s...)
+	for _, m := range lists {
+		f = append(f, m...)
+	}
+	return f
 }
