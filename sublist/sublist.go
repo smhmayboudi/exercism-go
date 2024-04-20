@@ -1,43 +1,30 @@
 package sublist
 
-import "slices"
+import "reflect"
 
 // Relation type is defined in relations.go file.
 
 func Sublist(l1, l2 []int) Relation {
-	ll1 := len(l1)
-	ll2 := len(l2)
-	if len(l1) == 0 && len(l2) == 0 {
+	if reflect.DeepEqual(l1, l2) {
 		return RelationEqual
 	}
-	slices.Sort(l1)
-	slices.Sort(l2)
-	if ll2 < ll1 {
-		check := true
-		for i := 0; i < ll2; i++ {
-			check = check && (l1[i] == l2[i])
-		}
-		if !check {
-			return RelationUnequal
-		}
-		return RelationSuperlist
-	} else if ll1 < ll2 {
-		check := true
-		for i := 0; i < ll1; i++ {
-			check = check && (l1[i] == l2[i])
-		}
-		if !check {
-			return RelationUnequal
-		}
+	if contains(l2, l1) {
 		return RelationSublist
-	} else {
-		check := true
-		for i := 0; i < ll1; i++ {
-			check = check && (l1[i] == l2[i])
-		}
-		if !check {
-			return RelationUnequal
-		}
-		return RelationEqual
 	}
+	if contains(l1, l2) {
+		return RelationSuperlist
+	}
+	return RelationUnequal
+}
+
+func contains(s1, s2 []int) bool {
+	i, j := 0, 0
+	for ; i < len(s1) && j < len(s2); i++ {
+		if s1[i] == s2[j] {
+			j++
+		} else {
+			i, j = i-j, 0
+		}
+	}
+	return j == len(s2)
 }
