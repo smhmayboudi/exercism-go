@@ -1,14 +1,18 @@
 package series
 
 func All(n int, s string) []string {
-	l := len(s)
-	out := []string{}
-	for i := 0; i < l; i++ {
-		out = append(out, s[0+i:n+i])
+	output := []string{}
+	for i := 0; i+n <= len(s); i++ {
+		output = append(output, s[i:i+n])
 	}
-	return out
+	return output
 }
-
 func UnsafeFirst(n int, s string) string {
-	return All(n, s)[0]
+	return s[:n]
+}
+func First(n int, s string) (first string, ok bool) {
+	if n > len(s) {
+		return "", false
+	}
+	return s[:n], true
 }
