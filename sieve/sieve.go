@@ -1,20 +1,24 @@
 package sieve
 
 func Sieve(limit int) []int {
-	primes := make(map[int]bool, limit-2)
-	for i := 0; i < limit-2; i++ {
-		currentNumber := i + 2
-		if primes[currentNumber] {
+	cap := limit - 1
+	strNum := 2
+	primes := make(map[int]bool, cap)
+	for i := 0; i < cap; i++ {
+		if primes[i] {
 			continue
+		} else {
+			primes[i] = false
 		}
-		for j := 2; currentNumber*j <= limit; j++ {
-			primes[currentNumber*j] = true
+		currentNumber := i + strNum
+		for j := currentNumber; j < cap; j = j + currentNumber {
+			primes[j] = true
 		}
 	}
 	res := []int{}
 	for i, v := range primes {
 		if !v {
-			res = append(res, i)
+			res = append(res, i+strNum)
 		}
 	}
 	return res
