@@ -34,25 +34,39 @@ func Encode(pt string) string {
 	sb.Reset()
 	sb.Grow(le + r)
 
-	for j := 0; j < r+1; j++ {
-		for i := 0 + j; i < c*r; i = i + c {
-			if i < le {
-				sb.WriteRune(runes[i])
+	for i := 0; i < c; i++ {
+		for j := 0; j < r; j++ {
+			if i+j*c < le {
+				sb.WriteRune(runes[i+j*c])
 			} else {
 				sb.WriteRune(' ')
 			}
 		}
-		if j+1 < r+1 {
+		if i+1 < c {
 			sb.WriteRune(' ')
 		}
+
 	}
+
+	// for j := 0; j < r+1; j++ {
+	// 	for i := 0 + j; i < c*r; i = i + c {
+	// 		if i < le {
+	// 			sb.WriteRune(runes[i])
+	// 		} else {
+	// 			sb.WriteRune(' ')
+	// 		}
+	// 	}
+	// 	if j+1 < r+1 {
+	// 		sb.WriteRune(' ')
+	// 	}
+	// }
 	return sb.String()
 }
 
 func Box(le int) (r int, c int) {
 	start := int(math.Sqrt(float64(le)))
-	for row := start; row <= (le+1)/2; row++ {
-		for col := start; col <= (le+1)/2; col++ {
+	for row := start; row <= le/2+1; row++ {
+		for col := start; col <= le/2+1; col++ {
 			if le <= row*col && row <= col && col-row <= 1 {
 				r = row
 				c = col
