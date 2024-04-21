@@ -1,0 +1,64 @@
+package cryptosquare
+
+import (
+	"math"
+	"strings"
+)
+
+func Encode(pt string) string {
+	runes := []rune(pt)
+	var sb strings.Builder
+
+	le := len(runes)
+	sb.Grow(le)
+
+	// Filter
+	for i := 0; i < le; i++ {
+		v := runes[i]
+		if 'A' <= v && v <= 'Z' {
+			sb.WriteRune(v - 'A' + 'a')
+		} else if 'a' <= v && v <= 'z' {
+			sb.WriteRune(v)
+		} else if '0' <= v && v <= '9' {
+			sb.WriteRune(v)
+		}
+	}
+
+	// Rectangle
+	pt = sb.String()
+	runes = []rune(pt)
+	le = len(runes)
+
+	r, c := Box(le)
+
+	sb.Reset()
+	sb.Grow(le + r)
+
+	for j := 0; j < r+1; j++ {
+		for i := 0 + j; i < c*r; i = i + c {
+			if i < le {
+				sb.WriteRune(runes[i])
+			} else {
+				sb.WriteRune(' ')
+			}
+		}
+		if j+1 < r+1 {
+			sb.WriteRune(' ')
+		}
+	}
+	return sb.String()
+}
+
+func Box(le int) (r int, c int) {
+	start := int(math.Sqrt(float64(le)))
+	for row := start; row <= (le+1)/2; row++ {
+		for col := start; col <= (le+1)/2; col++ {
+			if le <= row*col && row <= col && col-row <= 1 {
+				r = row
+				c = col
+				return
+			}
+		}
+	}
+	return
+}
