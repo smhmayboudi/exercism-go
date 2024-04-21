@@ -1,36 +1,44 @@
 package wordy
 
 import (
-	"fmt"
 	"regexp"
 	"strconv"
+	"strings"
 )
 
-func Answer(question string) (int, bool) {
-	re := regexp.MustCompile(`-?\d+`)
-	a := re.FindStringSubmatch(question)
-	b := re.FindAllStringSubmatch(question, -1)
-	plus, _ := regexp.MatchString(`(-?\d+) plus (-?\d+)`, question)
-	minus, _ := regexp.MatchString(`-?\d+ minus -?\d+`, question)
-	multipliedBy, _ := regexp.MatchString(`-?\d+ multiplied by -?\d+`, question)
-	dividedBy, _ := regexp.MatchString(`-?\d+ divided by -?\d+`, question)
+var operations = map[*regexp.Regexp]func(a, b int) int{
+	regexp.MustCompile(`^(.*) multiplied by (-?\d+)$`): func(a, b int) int { return a * b },
+	regexp.MustCompile(`^(.*) divided by (-?\d+)$`):    func(a, b int) int { return a / b },
+	regexp.MustCompile(`^(.*) plus (-?\d+)$`):          func(a, b int) int { return a + b },
+	regexp.MustCompile(`^(.*) minus (-?\d+)$`):         func(a, b int) int { return a - b },
+}
 
-	fmt.Println(a, b, plus, minus, multipliedBy, dividedBy)
-
-	total := 0
-	for i := 0; i < len(b); i++ {
-		v, _ := strconv.Atoi(b[i][0])
-		if plus {
-			total += v
-		} else if minus {
-			total -= v
-		} else if multipliedBy {
-			total *= v
-		} else if dividedBy {
-			total /= v
-		} else {
-			return 0, false
+func solve(question string) (int, bool) {
+	v, err := strconv.Atoi(question)
+	if err == nil {
+		return v, true
+	}
+	for re, op := range operations {
+		if m := re.FindStringSubmatch(question); m != nil {
+			a, okA := solve(m[1])
+			b, okB := solve(m[2])
+			if okA && okB {
+				return op(a, b), true
+			}
 		}
 	}
-	return total, true
+	return 0, false
+}
+
+// Answer returns an int answer to a string question.
+func Answer(question string) (int, bool) {
+	if !strings.HasPrefix(question, "What is ") {
+		return 0, false
+	}
+	if !strings.HasSuffix(question, "?") {
+		return 0, false
+	}
+	question = strings.TrimPrefix(question, "What is ")
+	question = strings.TrimSuffix(question, "?")
+	return solve(question)
 }
