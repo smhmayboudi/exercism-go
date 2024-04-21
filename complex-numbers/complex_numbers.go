@@ -43,7 +43,10 @@ func (n1 Number) Multiply(n2 Number) Number {
 
 // Times
 func (n Number) Times(factor float64) Number {
-	panic("Please implement the Times method")
+	return Number{
+		a: n.a * factor,
+		b: n.b * factor,
+	}
 }
 
 // Divide is (a + i * b) / (c + i * d) = (a * c + b * d)/(c^2 + d^2) + (b * c - a * d)/(c^2 + d^2) * i.
@@ -69,5 +72,9 @@ func (n Number) Abs() float64 {
 
 // Exp is e^(a + i * b) = e^a * e^(i * b), e^(i * b) = cos(b) + i * sin(b).
 func (n Number) Exp() Number {
-	panic("Please implement the Times method")
+	aExp := math.Exp(n.a)
+	return Number{
+		a: aExp * math.Cos(n.b),
+		b: aExp * math.Sin(n.b),
+	}
 }
