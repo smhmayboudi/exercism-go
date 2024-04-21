@@ -1,44 +1,91 @@
 package wordy
 
 import (
-	"regexp"
 	"strconv"
 	"strings"
 )
 
-var operations = map[*regexp.Regexp]func(a, b int) int{
-	regexp.MustCompile(`^(.*) multiplied by (-?\d+)$`): func(a, b int) int { return a * b },
-	regexp.MustCompile(`^(.*) divided by (-?\d+)$`):    func(a, b int) int { return a / b },
-	regexp.MustCompile(`^(.*) plus (-?\d+)$`):          func(a, b int) int { return a + b },
-	regexp.MustCompile(`^(.*) minus (-?\d+)$`):         func(a, b int) int { return a - b },
-}
-
-func solve(question string) (int, bool) {
-	v, err := strconv.Atoi(question)
-	if err == nil {
-		return v, true
+func Answer(question string) (int, bool) {
+	qLength := len(question)
+	if qLength < 10 {
+		return 0, false
 	}
-	for re, op := range operations {
-		if m := re.FindStringSubmatch(question); m != nil {
-			a, okA := solve(m[1])
-			b, okB := solve(m[2])
-			if okA && okB {
-				return op(a, b), true
+	if question[qLength-1] == '?' {
+		question = question[:qLength-1]
+	}
+	words := strings.Split(question, " ")
+	length := len(words)
+	if length < 3 {
+		return 0, false
+	}
+	if words[0] != "What" || words[1] != "is" {
+		return 0, false
+	}
+	words = words[2:]
+	length -= 2
+	total, err := strconv.Atoi(words[0])
+	if err != nil {
+		return 0, false
+	}
+	length -= 1
+	if length == 0 {
+		return total, true
+	}
+	words = words[1:]
+	wordsNoBy := make([]string, 0, len(words))
+	for _, w := range words {
+		if w != "by" {
+			wordsNoBy = append(wordsNoBy, w)
+		}
+	}
+	nums := make([]int, 0, len(words))
+	ops := make([]string, 0, len(words))
+	for i, x := range wordsNoBy {
+		if i%2 == 0 {
+			ops = append(ops, x)
+		} else {
+			n, err := strconv.Atoi(x)
+			if err == nil {
+				nums = append(nums, n)
+			} else {
+				return 0, false
 			}
 		}
 	}
-	return 0, false
+	if len(ops) != len(nums) {
+		return 0, false
+	}
+	for i := 0; i < len(ops); i++ {
+		op := ops[i]
+		switch op {
+		case "plus":
+			total = add(total, nums[i])
+		case "minus":
+			total = subtract(total, nums[i])
+		case "multiplied":
+			total = multiply(total, nums[i])
+		case "divided":
+			total = divide(total, nums[i])
+		default:
+			return 0, false
+		}
+	}
+
+	return total, true
 }
 
-// Answer returns an int answer to a string question.
-func Answer(question string) (int, bool) {
-	if !strings.HasPrefix(question, "What is ") {
-		return 0, false
-	}
-	if !strings.HasSuffix(question, "?") {
-		return 0, false
-	}
-	question = strings.TrimPrefix(question, "What is ")
-	question = strings.TrimSuffix(question, "?")
-	return solve(question)
+func add(a, b int) int {
+	return a + b
+}
+
+func subtract(a, b int) int {
+	return a - b
+}
+
+func multiply(a, b int) int {
+	return a * b
+}
+
+func divide(a, b int) int {
+	return a / b
 }
