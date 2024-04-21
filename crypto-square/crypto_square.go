@@ -32,7 +32,7 @@ func Encode(pt string) string {
 	r, c := Box(le)
 
 	sb.Reset()
-	sb.Grow(le + r)
+	sb.Grow(le + r + c)
 
 	for i := 0; i < c; i++ {
 		for j := 0; j < r; j++ {
@@ -45,21 +45,7 @@ func Encode(pt string) string {
 		if i+1 < c {
 			sb.WriteRune(' ')
 		}
-
 	}
-
-	// for j := 0; j < r+1; j++ {
-	// 	for i := 0 + j; i < c*r; i = i + c {
-	// 		if i < le {
-	// 			sb.WriteRune(runes[i])
-	// 		} else {
-	// 			sb.WriteRune(' ')
-	// 		}
-	// 	}
-	// 	if j+1 < r+1 {
-	// 		sb.WriteRune(' ')
-	// 	}
-	// }
 	return sb.String()
 }
 
