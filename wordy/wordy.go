@@ -1,91 +1,99 @@
 package wordy
 
 import (
+	"math"
 	"strconv"
 	"strings"
 )
 
-func Answer(question string) (int, bool) {
-	qLength := len(question)
-	if qLength < 10 {
-		return 0, false
-	}
-	if question[qLength-1] == '?' {
-		question = question[:qLength-1]
-	}
-	words := strings.Split(question, " ")
-	length := len(words)
-	if length < 3 {
-		return 0, false
-	}
-	if words[0] != "What" || words[1] != "is" {
-		return 0, false
-	}
-	words = words[2:]
-	length -= 2
-	total, err := strconv.Atoi(words[0])
-	if err != nil {
-		return 0, false
-	}
-	length -= 1
-	if length == 0 {
-		return total, true
-	}
-	words = words[1:]
-	wordsNoBy := make([]string, 0, len(words))
-	for _, w := range words {
-		if w != "by" {
-			wordsNoBy = append(wordsNoBy, w)
-		}
-	}
-	nums := make([]int, 0, len(words))
-	ops := make([]string, 0, len(words))
-	for i, x := range wordsNoBy {
-		if i%2 == 0 {
-			ops = append(ops, x)
-		} else {
-			n, err := strconv.Atoi(x)
-			if err == nil {
-				nums = append(nums, n)
-			} else {
-				return 0, false
+func delimiters(ch rune) bool {
+	return ch == ' ' || ch == '?'
+}
+
+type info struct {
+	num   int
+	op    string
+	state string
+}
+type handler func(*info, string) bool
+
+var stateMap = make(map[string]handler)
+
+func init() {
+	// generate the map of states to functions */
+	stateMap["initial"] = wordState([]string{"What"})
+	stateMap["What"] = wordState([]string{"is"})
+	stateMap["is"] = numState()
+	stateMap["number"] = wordState([]string{"plus", "minus", "multiplied", "divided", "to"})
+	stateMap["plus"] = numState()
+	stateMap["minus"] = numState()
+	stateMap["multiplied"] = wordState([]string{"by"})
+	stateMap["divided"] = wordState([]string{"by"})
+	stateMap["by"] = numState()
+	stateMap["to"] = wordState([]string{"the"})
+	stateMap["the"] = wordState([]string{"power"})
+	stateMap["power"] = wordState([]string{"of"})
+	stateMap["of"] = numState()
+}
+
+// wordState returns a function that handles expected word inputs
+func wordState(nextState []string) handler {
+	return func(stateInfo *info, word string) bool {
+		for _, v := range nextState {
+			if word == v {
+				stateInfo.state = v
+				if stateInfo.op == "" {
+					stateInfo.op = v
+				}
+				return true
 			}
 		}
+		return false
 	}
-	if len(ops) != len(nums) {
-		return 0, false
+}
+
+// numState returns a function that handles expected numeric inputs
+func numState() handler {
+	return func(stateInfo *info, word string) bool {
+		n, err := strconv.Atoi(word)
+		if err != nil {
+			return false
+		}
+		if stateInfo.op == "What" {
+			stateInfo.num = n
+		} else if stateInfo.op == "plus" {
+			stateInfo.num += n
+		} else if stateInfo.op == "minus" {
+			stateInfo.num -= n
+		} else if stateInfo.op == "multiplied" {
+			stateInfo.num *= n
+		} else if stateInfo.op == "divided" && n != 0 {
+			stateInfo.num /= n
+		} else if stateInfo.op == "to" {
+			stateInfo.num = int(math.Pow(float64(stateInfo.num), float64(n)))
+		} else {
+			return false
+		}
+		stateInfo.op = ""
+		stateInfo.state = "number"
+		return true
 	}
-	for i := 0; i < len(ops); i++ {
-		op := ops[i]
-		switch op {
-		case "plus":
-			total = add(total, nums[i])
-		case "minus":
-			total = subtract(total, nums[i])
-		case "multiplied":
-			total = multiply(total, nums[i])
-		case "divided":
-			total = divide(total, nums[i])
-		default:
+}
+
+// Answer answers simple integer arithmetic questions
+func Answer(input string) (int, bool) {
+	words := strings.FieldsFunc(input, delimiters)
+	stateInfo := info{0, "", "initial"}
+	for _, v := range words {
+		if v == "" {
+			continue
+		}
+		if !stateMap[stateInfo.state](&stateInfo, v) {
 			return 0, false
 		}
 	}
-
-	return total, true
-}
-
-func add(a, b int) int {
-	return a + b
-}
-
-func subtract(a, b int) int {
-	return a - b
-}
-
-func multiply(a, b int) int {
-	return a * b
-}
-
-func divide(a, b int) int {
-	return a / b
+	if stateInfo.state != "number" {
+		return 0, false
+	}
+	return stateInfo.num, true
 }
