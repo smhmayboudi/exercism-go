@@ -16,7 +16,8 @@ func Frequency(text string) FreqMap {
 // ConcurrentFrequency counts the frequency of each rune in the given strings,
 // by making use of concurrency.
 func ConcurrentFrequency(texts []string) FreqMap {
-	ch := make(chan FreqMap)
+	le := len(texts)
+	ch := make(chan FreqMap, le)
 	for _, value := range texts {
 		go func(v string) {
 			ch <- Frequency(v)
