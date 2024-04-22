@@ -1,23 +1,14 @@
 package flatten
 
-func Flatten(nested any) []any {
-	numsIN := Flat(nested)
-	out := []any{}
-	for i := 0; i < len(numsIN); i++ {
-		n, _ := numsIN[i].(int)
-		out = append(out, n)
+func Flatten(input any) []any {
+	result := []any{}
+	switch content := input.(type) {
+	case []any:
+		for _, item := range content {
+			result = append(result, Flatten(item)...)
+		}
+	case any:
+		result = append(result, content)
 	}
-	return out
-}
-
-func Flat(nested any) []any {
-	nums := []any{}
-	ok := false
-
-	nums, ok = nested.([]any)
-	for ok == false {
-		return Flat(nums)
-	}
-
-	return nums
+	return result
 }
