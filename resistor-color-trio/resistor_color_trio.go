@@ -8,24 +8,12 @@ import (
 // The label is a string with a resistance value with an unit appended
 // (e.g. "33 ohms", "470 kiloohms").
 func Label(colors []string) string {
-	ribbon := map[string]int{
-		"black":  0,
-		"brown":  1,
-		"red":    2,
-		"orange": 3,
-		"yellow": 4,
-		"green":  5,
-		"blue":   6,
-		"violet": 7,
-		"grey":   8,
-		"white":  9,
-	}
-	value0 := ribbon[colors[0]]
-	value1 := ribbon[colors[1]]
+	value0 := Ribbon(colors[0])
+	value1 := Ribbon(colors[1])
 	res := 10*value0 + value1
 	for i := 2; i < len(colors) && i < 3; i++ {
 		value := colors[i]
-		ab := ribbon[value]
+		ab := Ribbon(value)
 		ten := 1
 		for j := 0; j < ab; j++ {
 			ten *= 10
@@ -40,4 +28,31 @@ func Label(colors []string) string {
 		return fmt.Sprintf("%d kiloohms", res/1_000)
 	}
 	return fmt.Sprintf("%d ohms", res)
+}
+
+func Ribbon(color string) int {
+	switch color {
+	case "black":
+		return 0
+	case "brown":
+		return 1
+	case "red":
+		return 2
+	case "orange":
+		return 3
+	case "yellow":
+		return 4
+	case "green":
+		return 5
+	case "blue":
+		return 6
+	case "violet":
+		return 7
+	case "grey":
+		return 8
+	case "white":
+		return 9
+	default:
+		return 0
+	}
 }
