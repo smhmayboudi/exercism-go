@@ -1,8 +1,6 @@
 package resistorcolortrio
 
-import (
-	"fmt"
-)
+import "strconv"
 
 // Label describes the resistance value given the colors of a resistor.
 // The label is a string with a resistance value with an unit appended
@@ -21,13 +19,13 @@ func Label(colors []string) string {
 		res *= ten
 	}
 	if res/1_000_000_000 != 0 && res%1_000_000_000 == 0 {
-		return fmt.Sprintf("%d gigaohms", res/1_000_000_000)
+		return strconv.Itoa(res/1_000_000_000) + " gigaohms"
 	} else if res/1_000_000 != 0 && res%1_000_000 == 0 {
-		return fmt.Sprintf("%d megaohms", res/1_000_000)
+		return strconv.Itoa(res/1_000_000) + " megaohms"
 	} else if res/1_000 != 0 && res%1_000 == 0 {
-		return fmt.Sprintf("%d kiloohms", res/1_000)
+		return strconv.Itoa(res/1_000) + " kiloohms"
 	}
-	return fmt.Sprintf("%d ohms", res)
+	return strconv.Itoa(res) + " ohms"
 }
 
 func Ribbon(color string) int {
