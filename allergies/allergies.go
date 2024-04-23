@@ -1,29 +1,31 @@
 package allergies
 
-const testVersion = 1
-
-var allergens = map[string]uint{
-	"eggs":         1,
-	"peanuts":      2,
-	"shellfish":    4,
-	"strawberries": 8,
-	"tomatoes":     16,
-	"chocolate":    32,
-	"pollen":       64,
-	"cats":         128,
+var allergens = map[uint]string{
+	1:   "eggs",
+	2:   "peanuts",
+	4:   "shellfish",
+	8:   "strawberries",
+	16:  "tomatoes",
+	32:  "chocolate",
+	64:  "pollen",
+	128: "cats",
 }
 
-func AllergicTo(score uint, a string) bool {
-	allergen := allergens[a]
-	return score&allergen != 0
-}
-
-func Allergies(score uint) []string {
-	allergies := []string{}
-	for allergen, s := range allergens {
-		if score&s != score {
-			allergies = append(allergies, allergen)
+func Allergies(score uint) (allergies []string) {
+	for i := uint(1); i <= 128; i *= 2 {
+		if score&i == i {
+			allergies = append(allergies, allergens[i])
 		}
 	}
-	return allergies
+	return
+}
+
+func AllergicTo(score uint, substance string) bool {
+	allergens := Allergies(score)
+	for _, al := range allergens {
+		if al == substance {
+			return true
+		}
+	}
+	return false
 }
