@@ -1,32 +1,42 @@
 package piglatin
 
-import "strings"
+import (
+	"regexp"
+	"strings"
+)
 
-// isVowel returns true for a,e,i,o,u.
-func isVowel(c byte) bool { return c == 'a' || c == 'e' || c == 'i' || c == 'o' || c == 'u' }
-
-// findVowel finds the first vowel sound in the word.
-func findVowel(word string) int {
-	for i, c := range []byte(word) {
-		if isVowel(c) && (i == 0 || word[i-1] != 'q' || c != 'u') {
-			return i
-		} else if (c == 'y' || c == 'x') && (i == len(word)-1 || !isVowel(word[i+1])) {
-			return i
-		}
+func Sentence(text string) string {
+	words := strings.Split(text, " ")
+	res := make([]string, 0, len(words))
+	for _, w := range words {
+		res = append(res, word(w))
 	}
-	return len(word)
+	return strings.Join(res, " ")
 }
 
-// Sentence converts message to pig latin
-func Sentence(input string) string {
+var (
+	beginVowelRe, _     = regexp.Compile(`^([aeiou].|xr|yt).+$`)
+	beginConsonantRe, _ = regexp.Compile(`^([^aeiou]+)(.+)$`)
+	quRe, _             = regexp.Compile(`^([^aeiou]*qu)(.+)$`)
+	yVowelRe, _         = regexp.Compile(`^([^aeiou]+|.)(y.+)$`)
+)
 
-	// For each word in input
-	words := strings.Fields(input)
-	for i, word := range words {
-
-		// Find the first j sound, and modify word
-		j := findVowel(word)
-		words[i] = word[j:] + word[:j] + "ay"
+func word(word string) string {
+	// Rule 1
+	if beginVowelRe.MatchString(word) {
+		return word + "ay"
 	}
-	return strings.Join(words, " ")
+	// Rule 3
+	if match := quRe.FindStringSubmatch(word); match != nil {
+		return match[2] + match[1] + "ay"
+	}
+	// Rule 4
+	if match := yVowelRe.FindStringSubmatch(word); match != nil {
+		return match[2] + match[1] + "ay"
+	}
+	// Rule 2
+	if match := beginConsonantRe.FindStringSubmatch(word); match != nil {
+		return match[2] + match[1] + "ay"
+	}
+	return word
 }
