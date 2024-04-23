@@ -5,37 +5,38 @@ import (
 	"strings"
 )
 
-func Sentence(sentence string) string {
-	// A, E, I, O, and U
-	// Rule 1: xray -> xray+ay | yttria -> yttria+ay | xrita -> xrita+ay
-	re := regexp.MustCompile(`^([aeiou]|xr|yt)`)
-	if matched := re.MatchString(sentence); matched {
-		return sentence + "ay"
+func Sentence(text string) string {
+	words := strings.Split(text, " ")
+	res := make([]string, 0, len(words))
+	for _, w := range words {
+		res = append(res, word(w))
 	}
-	// B, C, D, F, G, H, J, K, L, M, N, P, Q, R, S, T, V, W, X, Y, and Z
-	// Rule 2: chair -> air+ch+ay
-	re = regexp.MustCompile(`^[bcdfghjklmnpqrstvwxyz]+`)
-	if matched := re.MatchString(sentence); matched {
-		submatch := re.FindStringSubmatch(sentence)
-		lastSubmatch := submatch[len(submatch)-1]
-		sentence = strings.Replace(sentence, lastSubmatch, "", 1)
-		return sentence + lastSubmatch + "ay"
+	return strings.Join(res, " ")
+}
+
+var (
+	beginVowelRe, _     = regexp.Compile(`^([aeiou].|xr|yt).+$`)
+	beginConsonantRe, _ = regexp.Compile(`^([^aeiou]+)(.+)$`)
+	quRe, _             = regexp.Compile(`^([^aeiou]*qu)(.+)$`)
+	yVowelRe, _         = regexp.Compile(`^([^aeiou]+|.)(y.+)$`)
+)
+
+func word(word string) string {
+	// Rule 1
+	if beginVowelRe.MatchString(word) {
+		return word + "ay"
 	}
-	// Rule 3: square -> are+squ+ay
-	re = regexp.MustCompile(`^[bcdfghjklmnpqrstvwxyz](qu)?`)
-	if matched := re.MatchString(sentence); matched {
-		submatch := re.FindStringSubmatch(sentence)
-		lastSubmatch := submatch[len(submatch)-1]
-		sentence = strings.Replace(sentence, lastSubmatch, "", 1)
-		return sentence + lastSubmatch + "ay"
+	// Rule 3
+	if match := quRe.FindStringSubmatch(word); match != nil {
+		return match[2] + match[1] + "ay"
 	}
-	// Rule 4: rhythm -> ythm+rh+ay | my -> y+m+ay
-	re = regexp.MustCompile(`^([bcdfghjklmnpqrstvwxyz]+|[aeiou])y`)
-	if matched := re.MatchString(sentence); matched {
-		submatch := re.FindStringSubmatch(sentence)
-		lastSubmatch := submatch[len(submatch)-1]
-		sentence = strings.Replace(sentence, lastSubmatch, "", 1)
-		return sentence + lastSubmatch + "ay"
+	// Rule 4
+	if match := yVowelRe.FindStringSubmatch(word); match != nil {
+		return match[2] + match[1] + "ay"
 	}
-	return sentence
+	// Rule 2
+	if match := beginConsonantRe.FindStringSubmatch(word); match != nil {
+		return match[2] + match[1] + "ay"
+	}
+	return word
 }
