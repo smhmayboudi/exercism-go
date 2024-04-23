@@ -1,42 +1,41 @@
 package piglatin
 
 import (
-	"regexp"
 	"strings"
 )
 
-func Sentence(text string) string {
-	words := strings.Split(text, " ")
-	res := make([]string, 0, len(words))
-	for _, w := range words {
-		res = append(res, word(w))
-	}
-	return strings.Join(res, " ")
-}
+// Sentence doc here
+func Sentence(sentence string) string {
+	converter := func(word string) string {
+		qu := strings.Index(word, "qu")
+		y := strings.Index(word, "y")
+		vowel := strings.IndexAny(word, "aeiou")
+		if len(word) >= 2 && (word[:2] == "xr" || word[:2] == "yt") {
+			vowel = 0
+		}
 
-var (
-	beginVowelRe, _     = regexp.Compile(`^([aeiou].|xr|yt).+$`)
-	beginConsonantRe, _ = regexp.Compile(`^([^aeiou]+)(.+)$`)
-	quRe, _             = regexp.Compile(`^([^aeiou]*qu)(.+)$`)
-	yVowelRe, _         = regexp.Compile(`^([^aeiou]+|.)(y.+)$`)
-)
+		index := 0
 
-func word(word string) string {
-	// Rule 1
-	if beginVowelRe.MatchString(word) {
-		return word + "ay"
+		if vowel == 0 {
+			index = 0
+		} else if y == 1 && len(word) == 2 {
+			word = strings.Join([]string{word[1:], word[:1]}, "")
+			index = 0
+		} else if y > 0 && (y < vowel || vowel == -1) {
+			index = y
+		} else if qu >= 0 {
+			index = qu + 2
+		} else {
+			index = vowel
+		}
+		return strings.Join([]string{word[index:], word[:index], "ay"}, "")
 	}
-	// Rule 3
-	if match := quRe.FindStringSubmatch(word); match != nil {
-		return match[2] + match[1] + "ay"
+
+	words := strings.Split(sentence, " ")
+	converted := make([]string, len(words))
+	for i, word := range words {
+		converted[i] = converter(word)
 	}
-	// Rule 4
-	if match := yVowelRe.FindStringSubmatch(word); match != nil {
-		return match[2] + match[1] + "ay"
-	}
-	// Rule 2
-	if match := beginConsonantRe.FindStringSubmatch(word); match != nil {
-		return match[2] + match[1] + "ay"
-	}
-	return word
+
+	return strings.Join(converted, " ")
 }
