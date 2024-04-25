@@ -6,7 +6,7 @@ import (
 )
 
 func Gen(char byte) (string, error) {
-	if char < 'A' && 'Z' < char {
+	if char < 'A' || 'Z' < char {
 		return "", errors.New("invalid character.")
 	}
 	dim := int(char - 'A')
