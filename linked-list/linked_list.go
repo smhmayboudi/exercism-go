@@ -22,10 +22,15 @@ func NewList(elements ...any) *List {
 		node := Node{
 			Value: value,
 		}
-		if 1 < index {
-			node.PrevNode = list.LastNode
-		}
+		node.PrevNode = list.LastNode
 		list.LastNode = &node
+	}
+	for node := list.LastNode; node != nil; node = node.Prev() {
+		list.FirstNode = node
+		node.NextNode = list.FirstNode
+		if node.Prev() == nil {
+			break
+		}
 	}
 	return &list
 }
