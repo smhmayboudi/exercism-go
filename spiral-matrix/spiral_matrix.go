@@ -1,23 +1,19 @@
 package spiralmatrix
 
-func SpiralMatrix(size int) [][]int {
-	out := make([][]int, size)
-	for r := 0; r < size; r++ {
-		out[r] = make([]int, size)
+func SpiralMatrix(depth int) [][]int {
+	result := [][]int{}
+	for row := 0; row < depth; row++ {
+		result = append(result, make([]int, depth))
 	}
-	lastRow := 0
-	lastC := 0
-	for i := 0; i < size*size; i++ {
-		out[lastRow][lastC] = i + 1
-		if lastRow == 0 && lastC+1 < size {
-			lastC++
-		} else if lastC == size-1 && lastRow+1 < size {
-			lastRow++
-		} else if lastRow == size && 0 < lastC+1 {
-			lastC--
-		} else if lastC == 0 && 0 < lastRow+1 {
-			lastRow--
+	row, col := 0, 0
+	dr, dc := 0, 1
+	for i := 1; i <= depth*depth; i++ {
+		result[row][col] = i
+		if row+dr < 0 || depth <= row+dr || col+dc < 0 ||
+			depth <= col+dc || result[row+dr][col+dc] != 0 {
+			dr, dc = dc, -dr
 		}
+		row, col = row+dr, col+dc
 	}
-	return out
+	return result
 }
