@@ -5,85 +5,98 @@ import "errors"
 // Define List and Node types here.
 // Note: The tests expect Node type to include an exported field with name Value to pass.
 type Node struct {
-	LeftNode  *Node
-	RightNode *Node
+	Value    any
+	PrevNode *Node
+	NextNode *Node
 }
 
-type List []Node
+type List struct {
+	FirstNode *Node
+	LastNode  *Node
+}
 
 func NewList(elements ...any) *List {
-	for i := 0; i < len(elements); i++ {
-
+	list := List{}
+	for index := 0; index < len(elements); index++ {
+		value := elements[index]
+		node := Node{
+			Value: value,
+		}
+		if 1 < index {
+			node.PrevNode = list.LastNode
+		}
+		list.LastNode = &node
 	}
-	panic("Please implement the NewList function")
+	return &list
 }
 
 func (n *Node) Next() *Node {
-	return n.RightNode
+	return n.NextNode
 }
 
 func (n *Node) Prev() *Node {
-	return n.LeftNode
+	return n.PrevNode
 }
 
 func (l *List) Unshift(v any) {
-	for _, value := range *l {
-		if value.RightNode == nil {
-			node, _ := v.(Node)
-			node.RightNode = nil
-			node.LeftNode = &value
-			value.RightNode = &node
-		}
+	node := Node{
+		Value:    v,
+		PrevNode: l.LastNode,
+		NextNode: nil,
 	}
+	l.LastNode = &node
 }
 
 func (l *List) Push(v any) {
-	for _, value := range *l {
-		if value.LeftNode == nil {
-			node, _ := v.(Node)
-			node.RightNode = &value
-			node.LeftNode = nil
-			value.LeftNode = &node
-		}
+	node := Node{
+		Value:    v,
+		PrevNode: nil,
+		NextNode: l.FirstNode,
 	}
+	l.FirstNode = &node
 }
 
 func (l *List) Shift() (any, error) {
-	for _, value := range *l {
-		if value.RightNode == nil {
-			if value.LeftNode == nil {
-				return nil, errors.New("nothing more")
-			}
-			value.LeftNode.RightNode = nil
-		}
+	frontNode := l.LastNode
+	if frontNode == nil {
+		return nil, errors.New("empty list")
 	}
-	return l, nil
+	if frontNode.Prev() == nil {
+		return nil, errors.New("last item")
+	}
+	l.LastNode = frontNode.Prev()
+	return frontNode.Value, nil
 }
 
 func (l *List) Pop() (any, error) {
-	for _, value := range *l {
-		if value.LeftNode == nil {
-			if value.RightNode == nil {
-				return nil, errors.New("nothing more")
-			}
-			value.RightNode.LeftNode = nil
-		}
+	backNode := l.FirstNode
+	if backNode == nil {
+		return nil, errors.New("empty list")
 	}
-	return l, nil
+	if backNode.Next() == nil {
+		return nil, errors.New("last item")
+	}
+	l.FirstNode = backNode.Next()
+	return backNode.Value, nil
 }
 
 func (l *List) Reverse() {
 	list := List{}
-	for i := 0; i < len(*l); i++ {
-		v := (*l)[i]
+	node := l.First()
+	for {
+		list.Unshift(node.Value)
+		if node.Next() == nil {
+			break
+		}
+		node = node.Next()
 	}
-	panic("Please implement the Reverse function")
+	l = &list
 }
 
 func (l *List) First() *Node {
-	panic("Please implement the First function")
+	return l.FirstNode
 }
 
 func (l *List) Last() *Node {
-	panic("Please implement the Last function")
+	return l.LastNode
 }
