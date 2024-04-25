@@ -1,6 +1,10 @@
 package linkedlist
 
-import "errors"
+import (
+	"errors"
+)
+
+var ErrEmptyList = errors.New("empty list")
 
 // Define List and Node types here.
 // Note: The tests expect Node type to include an exported field with name Value to pass.
@@ -16,23 +20,11 @@ type List struct {
 }
 
 func NewList(elements ...any) *List {
-	list := List{}
-	for index := 0; index < len(elements); index++ {
-		value := elements[index]
-		node := Node{
-			Value: value,
-		}
-		node.PrevNode = list.LastNode
-		list.LastNode = &node
+	list := &List{}
+	for i := 0; i < len(elements); i++ {
+		list.Push(elements[i])
 	}
-	for node := list.LastNode; node != nil; node = node.Prev() {
-		list.FirstNode = node
-		node.NextNode = list.FirstNode
-		if node.Prev() == nil {
-			break
-		}
-	}
-	return &list
+	return list
 }
 
 func (n *Node) Next() *Node {
@@ -44,58 +36,70 @@ func (n *Node) Prev() *Node {
 }
 
 func (l *List) Unshift(v any) {
-	node := Node{
-		Value:    v,
-		PrevNode: l.LastNode,
-		NextNode: nil,
+	node := &Node{Value: v}
+	node.NextNode = l.FirstNode
+	if l.FirstNode != nil {
+		l.FirstNode.PrevNode = node
 	}
-	l.LastNode = &node
+	l.FirstNode = node
+	if l.LastNode == nil {
+		l.LastNode = node
+	}
 }
 
 func (l *List) Push(v any) {
-	node := Node{
-		Value:    v,
-		PrevNode: nil,
-		NextNode: l.FirstNode,
+	node := &Node{Value: v}
+	node.PrevNode = l.LastNode
+	if l.LastNode != nil {
+		l.LastNode.NextNode = node
 	}
-	l.FirstNode = &node
+	l.LastNode = node
+	if l.FirstNode == nil {
+		l.FirstNode = node
+	}
 }
 
 func (l *List) Shift() (any, error) {
-	frontNode := l.LastNode
-	if frontNode == nil {
-		return nil, errors.New("empty list")
+	if l.FirstNode == nil {
+		return nil, ErrEmptyList
 	}
-	if frontNode.Prev() == nil {
-		return nil, errors.New("last item")
+	val := l.FirstNode.Value
+	l.FirstNode = l.FirstNode.Next()
+	if l.FirstNode == nil {
+		l.LastNode = nil
+	} else {
+		l.FirstNode.PrevNode = nil
 	}
-	l.LastNode = frontNode.Prev()
-	return frontNode.Value, nil
+	return val, nil
+
 }
 
 func (l *List) Pop() (any, error) {
-	backNode := l.FirstNode
-	if backNode == nil {
-		return nil, errors.New("empty list")
+	if l.LastNode == nil {
+		return nil, ErrEmptyList
 	}
-	if backNode.Next() == nil {
-		return nil, errors.New("last item")
+	val := l.LastNode.Value
+	l.LastNode = l.LastNode.Prev()
+	if l.LastNode == nil {
+		l.FirstNode = nil
+	} else {
+		l.LastNode.NextNode = nil
 	}
-	l.FirstNode = backNode.Next()
-	return backNode.Value, nil
+	return val, nil
 }
 
 func (l *List) Reverse() {
-	list := List{}
-	node := l.First()
+	vals := []any{}
 	for {
-		list.Unshift(node.Value)
-		if node.Next() == nil {
+		v, err := l.Pop()
+		if err != nil {
 			break
 		}
-		node = node.Next()
+		vals = append(vals, v)
 	}
-	l = &list
+	for _, v := range vals {
+		l.Push(v)
+	}
 }
 
 func (l *List) First() *Node {
