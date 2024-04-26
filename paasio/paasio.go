@@ -1,13 +1,23 @@
 package paasio
 
-import "io"
+import (
+	"io"
+	"sync"
+)
 
 // Define readCounter and writeCounter types here.
 type writeCounter struct {
-	w io.Writer
+	sync.RWMutex
+	w    io.Writer
+	n    int64
+	nops int
 }
+
 type readCounter struct {
-	r io.Reader
+	sync.RWMutex
+	r    io.Reader
+	n    int64
+	nops int
 }
 
 // For the return of the function NewReadWriteCounter, you must also define a type that satisfies the ReadWriteCounter interface.
@@ -34,18 +44,34 @@ func NewReadWriteCounter(readwriter io.ReadWriter) ReadWriteCounter {
 	return &ReadWriteCount{w, r}
 }
 
-func (rc *readCounter) Read(p []byte) (n int, err error) {
-	return rc.r.Read(p)
+func (rc *readCounter) Read(p []byte) (int, error) {
+	rc.Lock()
+	defer rc.Unlock()
+
+	n, err := rc.r.Read(p)
+	rc.nops++
+	rc.n += int64(n)
+
+	return n, err
 }
 
-func (rc *readCounter) ReadCount() (n int64, nops int) {
-	panic("Please implement the ReadCount function")
+func (rc *readCounter) ReadCount() (int64, int) {
+	rc.Lock()
+	defer rc.Unlock()
+	return rc.n, rc.nops
 }
 
-func (wc *writeCounter) Write(p []byte) (n int, err error) {
-	return wc.w.Write(p)
+func (wc *writeCounter) Write(p []byte) (int, error) {
+	wc.Lock()
+	defer wc.Unlock()
+	n, err := wc.w.Write(p)
+	wc.nops++
+	wc.n += int64(n)
+	return n, err
 }
 
-func (wc *writeCounter) WriteCount() (n int64, nops int) {
-	panic("Please implement the WriteCount function")
+func (wc *writeCounter) WriteCount() (int64, int) {
+	wc.Lock()
+	defer wc.Unlock()
+	return wc.n, wc.nops
 }
