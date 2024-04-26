@@ -9,7 +9,7 @@ type Buffer struct {
 
 func NewBuffer(size int) *Buffer {
 	return &Buffer{
-		data:    []byte{},
+		data:    make([]byte, size),
 		maxSize: size,
 	}
 }
