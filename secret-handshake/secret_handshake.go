@@ -1,26 +1,23 @@
 package secret
 
 func Handshake(code uint) []string {
-	str := map[uint]string{
-		0b00001: "wink",
-		0b00010: "double blink",
-		0b00100: "close your eyes",
-		0b01000: "jump",
-		0b10000: "Reverse the order of the operations in the secret handshake.",
+	var result []string
+	if code&1 == 1 {
+		result = append(result, "wink")
 	}
-	out := []string{}
-	for index, value := range str {
-		if code|0b10000 == code {
-			if code|index != code {
-				out = append(out, value)
-			}
-
-		} else {
-
-			if code|index == code {
-				out = append(out, value)
-			}
+	if code&2 == 2 {
+		result = append(result, "double blink")
+	}
+	if code&4 == 4 {
+		result = append(result, "close your eyes")
+	}
+	if code&8 == 8 {
+		result = append(result, "jump")
+	}
+	if code&16 == 16 {
+		for i, j := 0, len(result)-1; i < j; i, j = i+1, j-1 {
+			result[i], result[j] = result[j], result[i]
 		}
 	}
-	return out
+	return result
 }
