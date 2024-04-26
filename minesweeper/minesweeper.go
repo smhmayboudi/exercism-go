@@ -1,43 +1,42 @@
 package minesweeper
 
-import (
-	"fmt"
-	"strings"
-)
+var neigboursShift = [8][2]int{
+	{-1, -1}, {-1, 0}, {-1, 1},
+	{0, -1}, {0, 1},
+	{1, -1}, {1, 0}, {1, 1},
+}
 
 // Annotate returns an annotated board
 func Annotate(board []string) []string {
-	lb := len(board)
-	out := make([]string, lb)
-	for r := 0; r < lb; r++ {
-		var sb strings.Builder
-		lbr := len(board[r])
-		for c := 0; c < lbr; c++ {
-			s := board[r][c]
-			if s == ' ' {
-				idx := 0
-				for r2 := r - 1; r2 <= r+1; r2++ {
-					for c2 := c - 1; c2 <= c2+1; c2++ {
-						top := 0 <= r2-1
-						left := 0 <= c2-1
-						right := c2 <= lbr
-						botton := r2 <= lb
-						if top && left && right && botton {
-							s2 := board[r2][c2]
-							if s2 == '*' {
-								idx++
-							}
+	bLen := len(board)
+	if bLen == 0 {
+		return []string{}
+	}
+	rLen := len(board[0])
+	newBoard := make([]string, bLen)
+	newRow := make([]rune, rLen)
+	for i, row := range board {
+		copy(newRow, []rune(row))
+		for x, c := range row {
+			if c == '*' {
+				continue
+			} else {
+				neigboursCount := 0
+				for _, shift := range neigboursShift {
+					sY := i + shift[0]
+					sX := x + shift[1]
+					if sY >= 0 && sY < bLen && sX >= 0 && sX < rLen {
+						if board[sY][sX] == '*' {
+							neigboursCount++
 						}
 					}
 				}
-				if idx != 0 {
-					sb.WriteString(fmt.Sprintf("%d", idx))
-				} else {
-					sb.WriteString(" ")
+				if neigboursCount != 0 {
+					newRow[x] = rune(neigboursCount + 48)
 				}
 			}
 		}
-		out[r] = sb.String()
+		newBoard[i] = string(newRow)
 	}
-	return out
+	return newBoard
 }
