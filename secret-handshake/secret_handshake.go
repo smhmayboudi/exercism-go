@@ -10,8 +10,16 @@ func Handshake(code uint) []string {
 	}
 	out := []string{}
 	for index, value := range str {
-		if code|index == code {
-			out = append(out, value)
+		if code|0b10000 == code {
+			if code|index != code {
+				out = append(out, value)
+			}
+
+		} else {
+
+			if code|index == code {
+				out = append(out, value)
+			}
 		}
 	}
 	return out
