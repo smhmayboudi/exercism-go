@@ -20,15 +20,11 @@ func Range(min, max int) []Triplet {
 
 // Sum returns a list of all Pythagorean triplets with a certain perimeter.
 func Sum(p int) []Triplet {
-	out := []Triplet{}
-	for i := 1; i <= p; i++ {
-		for j := i; j <= p; j++ {
-			for k := j; k <= p; k++ {
-				if i+j+k == p && i*i+j*j == k*k {
-					out = append(out, Triplet{i, j, k})
-				}
-			}
+	res := []Triplet{}
+	for _, t := range Range(1, p/2) {
+		if t[0]+t[1]+t[2] == p {
+			res = append(res, t)
 		}
 	}
-	return out
+	return res
 }
