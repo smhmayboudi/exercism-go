@@ -64,9 +64,11 @@ func (rc *readCounter) ReadCount() (int64, int) {
 func (wc *writeCounter) Write(p []byte) (int, error) {
 	wc.Lock()
 	defer wc.Unlock()
+
 	n, err := wc.w.Write(p)
 	wc.nops++
 	wc.n += int64(n)
+
 	return n, err
 }
 
