@@ -2,224 +2,157 @@ package ledger
 
 import (
 	"errors"
-	"strconv"
+	"fmt"
+	"sort"
 	"strings"
+	"unicode/utf8"
 )
 
 type Entry struct {
-	Date        string // "Y-m-d"
+	Date        string
 	Description string
-	Change      int // in cents
+	Change      int
 }
 
-func FormatLedger(currency string, locale string, entries []Entry) (string, error) {
-	var entriesCopy []Entry
-	for _, e := range entries {
-		entriesCopy = append(entriesCopy, e)
-	}
-	if len(entries) == 0 {
-		if _, err := FormatLedger(currency, "en-US", []Entry{{Date: "2014-01-01", Description: "", Change: 0}}); err != nil {
-			return "", err
-		}
-	}
-	m1 := map[bool]int{true: 0, false: 1}
-	m2 := map[bool]int{true: -1, false: 1}
-	es := entriesCopy
-	for len(es) > 1 {
-		first, rest := es[0], es[1:]
-		success := false
-		for !success {
-			success = true
-			for i, e := range rest {
-				if (m1[e.Date == first.Date]*m2[e.Date < first.Date]*4 +
-					m1[e.Description == first.Description]*m2[e.Description < first.Description]*2 +
-					m1[e.Change == first.Change]*m2[e.Change < first.Change]*1) < 0 {
-					es[0], es[i+1] = es[i+1], es[0]
-					success = false
-				}
-			}
-		}
-		es = es[1:]
-	}
+type Locale struct {
+	name                 string
+	headerDate           string
+	headerDescription    string
+	headerChange         string
+	separatorCurrency    string
+	separatorDecimal     string
+	separatorThousand    string
+	dateFormat           func(string, string, string) string
+	positiveNumberFormat func(string, string) string
+	negativeNumberFormat func(string, string) string
+}
 
-	var s string
-	if locale == "nl-NL" {
-		s = "Datum" +
-			strings.Repeat(" ", 10-len("Datum")) +
-			" | " +
-			"Omschrijving" +
-			strings.Repeat(" ", 25-len("Omschrijving")) +
-			" | " + "Verandering" + "\n"
-	} else if locale == "en-US" {
-		s = "Date" +
-			strings.Repeat(" ", 10-len("Date")) +
-			" | " +
-			"Description" +
-			strings.Repeat(" ", 25-len("Description")) +
-			" | " + "Change" + "\n"
+var currencySigns map[string]string
+
+func init() {
+	currencySigns = map[string]string{
+		"USD": "$",
+		"EUR": "€",
+	}
+}
+
+func locale(name string) *Locale {
+	switch name {
+	case "en-US":
+		return &Locale{
+			name:                 "en-US",
+			headerDate:           "Date",
+			headerDescription:    "Description",
+			headerChange:         "Change",
+			separatorCurrency:    "",
+			separatorDecimal:     ".",
+			separatorThousand:    ",",
+			dateFormat:           func(day, month, year string) string { return fmt.Sprintf("%s/%s/%s", month, day, year) },
+			positiveNumberFormat: func(number, sign string) string { return fmt.Sprintf("%s%s ", sign, number) },
+			negativeNumberFormat: func(number, sign string) string { return fmt.Sprintf("(%s%s)", sign, number) },
+		}
+	case "nl-NL":
+		return &Locale{
+			name:                 "nl-NL",
+			headerDate:           "Datum",
+			headerDescription:    "Omschrijving",
+			headerChange:         "Verandering",
+			separatorCurrency:    " ",
+			separatorDecimal:     ",",
+			separatorThousand:    ".",
+			dateFormat:           func(day, month, year string) string { return fmt.Sprintf("%s-%s-%s", day, month, year) },
+			positiveNumberFormat: func(number, sign string) string { return fmt.Sprintf("%s %s ", sign, number) },
+			negativeNumberFormat: func(number, sign string) string { return fmt.Sprintf("%s %s-", sign, number) },
+		}
+	default:
+		return nil
+	}
+}
+
+func compare(first, second Entry) bool {
+	if first.Date != second.Date {
+		return first.Date < second.Date
+	}
+	if first.Description != second.Description {
+		return first.Description < second.Description
+	}
+	if first.Change != second.Change {
+		return first.Change < second.Change
+	}
+	return false
+}
+func formatRow(cells []string, widths []int) string {
+	result := ""
+	for i, text := range cells {
+		right := false
+		width := widths[i]
+		if width < 0 {
+			width *= -1
+			right = true
+		}
+		length := utf8.RuneCountInString(text)
+		if length > width {
+			text = text[0:len(text)-5] + "..."
+			length = width
+		}
+		if i != 0 {
+			result += " | "
+		}
+		if right {
+			result += strings.Repeat(" ", width-length) + text
+		} else if i != len(cells)-1 {
+			result += text + strings.Repeat(" ", width-length)
+		} else {
+			result += text
+		}
+	}
+	return result + "\n"
+}
+func formatNumber(n int, currencySign string, locale Locale) string {
+	cents := n
+	if cents < 0 {
+		cents *= -1
+	}
+	number := fmt.Sprintf("%s%02d", locale.separatorDecimal, cents%100)
+	cents /= 100
+	number = fmt.Sprintf("%d%s", cents%1000, number)
+	cents /= 1000
+	for cents > 0 {
+		number = fmt.Sprintf("%d%s%s", cents%1000, locale.separatorThousand, number)
+		cents /= 1000
+	}
+	if n >= 0 {
+		return locale.positiveNumberFormat(number, currencySign)
 	} else {
+		return locale.negativeNumberFormat(number, currencySign)
+	}
+}
+func formatDate(locale *Locale, date string) (string, error) {
+	if len(date) != 10 || date[4] != '-' || date[7] != '-' {
 		return "", errors.New("")
 	}
-	// Parallelism, always a great idea
-	co := make(chan struct {
-		i int
-		s string
-		e error
+	year, month, day := date[0:4], date[5:7], date[8:10]
+	return locale.dateFormat(day, month, year), nil
+}
+func FormatLedger(currency string, localeName string, entries []Entry) (string, error) {
+	locale := locale(localeName)
+	currencySign, validCurrency := currencySigns[currency]
+	if locale == nil || !validCurrency {
+		return "", errors.New("")
+	}
+	entriesCopy := make([]Entry, len(entries))
+	copy(entriesCopy, entries)
+	sort.SliceStable(entriesCopy, func(i, j int) bool {
+		return compare(entriesCopy[i], entriesCopy[j])
 	})
-	for i, et := range entriesCopy {
-		go func(i int, entry Entry) {
-			if len(entry.Date) != 10 {
-				co <- struct {
-					i int
-					s string
-					e error
-				}{e: errors.New("")}
-			}
-			d1, d2, d3, d4, d5 := entry.Date[0:4], entry.Date[4], entry.Date[5:7], entry.Date[7], entry.Date[8:10]
-			if d2 != '-' {
-				co <- struct {
-					i int
-					s string
-					e error
-				}{e: errors.New("")}
-			}
-			if d4 != '-' {
-				co <- struct {
-					i int
-					s string
-					e error
-				}{e: errors.New("")}
-			}
-			de := entry.Description
-			if len(de) > 25 {
-				de = de[:22] + "..."
-			} else {
-				de = de + strings.Repeat(" ", 25-len(de))
-			}
-			var d string
-			if locale == "nl-NL" {
-				d = d5 + "-" + d3 + "-" + d1
-			} else if locale == "en-US" {
-				d = d3 + "/" + d5 + "/" + d1
-			}
-			negative := false
-			cents := entry.Change
-			if cents < 0 {
-				cents = cents * -1
-				negative = true
-			}
-			var a string
-			if locale == "nl-NL" {
-				if currency == "EUR" {
-					a += "€"
-				} else if currency == "USD" {
-					a += "$"
-				} else {
-					co <- struct {
-						i int
-						s string
-						e error
-					}{e: errors.New("")}
-				}
-				a += " "
-				centsStr := strconv.Itoa(cents)
-				switch len(centsStr) {
-				case 1:
-					centsStr = "00" + centsStr
-				case 2:
-					centsStr = "0" + centsStr
-				}
-				rest := centsStr[:len(centsStr)-2]
-				var parts []string
-				for len(rest) > 3 {
-					parts = append(parts, rest[len(rest)-3:])
-					rest = rest[:len(rest)-3]
-				}
-				if len(rest) > 0 {
-					parts = append(parts, rest)
-				}
-				for i := len(parts) - 1; i >= 0; i-- {
-					a += parts[i] + "."
-				}
-				a = a[:len(a)-1]
-				a += ","
-				a += centsStr[len(centsStr)-2:]
-				if negative {
-					a += "-"
-				} else {
-					a += " "
-				}
-			} else if locale == "en-US" {
-				if negative {
-					a += "("
-				}
-				if currency == "EUR" {
-					a += "€"
-				} else if currency == "USD" {
-					a += "$"
-				} else {
-					co <- struct {
-						i int
-						s string
-						e error
-					}{e: errors.New("")}
-				}
-				centsStr := strconv.Itoa(cents)
-				switch len(centsStr) {
-				case 1:
-					centsStr = "00" + centsStr
-				case 2:
-					centsStr = "0" + centsStr
-				}
-				rest := centsStr[:len(centsStr)-2]
-				var parts []string
-				for len(rest) > 3 {
-					parts = append(parts, rest[len(rest)-3:])
-					rest = rest[:len(rest)-3]
-				}
-				if len(rest) > 0 {
-					parts = append(parts, rest)
-				}
-				for i := len(parts) - 1; i >= 0; i-- {
-					a += parts[i] + ","
-				}
-				a = a[:len(a)-1]
-				a += "."
-				a += centsStr[len(centsStr)-2:]
-				if negative {
-					a += ")"
-				} else {
-					a += " "
-				}
-			} else {
-				co <- struct {
-					i int
-					s string
-					e error
-				}{e: errors.New("")}
-			}
-			var al int
-			for range a {
-				al++
-			}
-			co <- struct {
-				i int
-				s string
-				e error
-			}{i: i, s: d + strings.Repeat(" ", 10-len(d)) + " | " + de + " | " +
-				strings.Repeat(" ", 13-al) + a + "\n"}
-		}(i, et)
-	}
-	ss := make([]string, len(entriesCopy))
-	for range entriesCopy {
-		v := <-co
-		if v.e != nil {
-			return "", v.e
+	result := formatRow([]string{locale.headerDate, locale.headerDescription, locale.headerChange}, []int{10, 25, 13})
+	for _, entry := range entriesCopy {
+		date, err := formatDate(locale, entry.Date)
+		if err != nil {
+			return "", errors.New("")
 		}
-		ss[v.i] = v.s
+		amount := formatNumber(entry.Change, currencySign, *locale)
+		result += formatRow([]string{date, entry.Description, amount}, []int{10, 25, -13})
 	}
-	for i := 0; i < len(entriesCopy); i++ {
-		s += ss[i]
-	}
-	return s, nil
+	return result, nil
 }
