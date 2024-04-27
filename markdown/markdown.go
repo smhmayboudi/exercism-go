@@ -1,98 +1,51 @@
 package markdown
 
 // implementation to refactor
-
 import (
 	"fmt"
+	"regexp"
 	"strings"
 )
 
-func Replace(markdown string) string {
-	markdown = strings.Replace(markdown, "__", "<strong>", 1)
-	markdown = strings.Replace(markdown, "__", "</strong>", 1)
-	markdown = strings.Replace(markdown, "_", "<em>", 1)
-	markdown = strings.Replace(markdown, "_", "</em>", 1)
-	return markdown
-}
+var headingRegexp = regexp.MustCompile(`^(#{1,6})\s(.+)$`)
+var listRegexp = regexp.MustCompile(`^(\*)\s(.+)$`)
 
 // Render translates markdown to HTML
 func Render(markdown string) string {
-	header := 0
-	markdown = Replace(markdown)
-	pos := 0
-	list := 0
-	listOpened := false
 	html := ""
-	he := false
-	for {
-		char := markdown[pos]
-		if char == '#' {
-			for char == '#' {
-				header++
-				pos++
-				char = markdown[pos]
-			}
-			if header == 7 {
-				html += fmt.Sprintf("<p>%s ", strings.Repeat("#", header))
-			} else if he {
-				html += "# "
-				header--
-			} else {
-				html += fmt.Sprintf("<h%d>", header)
-			}
-			pos++
-			continue
-		}
-		he = true
-		if char == '*' && header == 0 && strings.Contains(markdown, "\n") {
-			if list == 0 {
+	list := false
+	for _, line := range strings.Split(markdown, "\n") {
+		line = replaceInlineElements(line)
+		if g := listRegexp.FindStringSubmatch(line); g != nil {
+			if !list {
 				html += "<ul>"
+				list = true
 			}
-			list++
-			if !listOpened {
-				html += "<li>"
-				listOpened = true
-			} else {
-				html += string(char) + " "
-			}
-			pos += 2
+			html += "<li>" + g[2] + "</li>"
 			continue
 		}
-		if char == '\n' {
-			if listOpened && strings.LastIndex(markdown, "\n") == pos && strings.LastIndex(markdown, "\n") > strings.LastIndex(markdown, "*") {
-				html += "</li></ul><p>"
-				listOpened = false
-				list = 0
-			}
-			if list > 0 && listOpened {
-				html += "</li>"
-				listOpened = false
-			}
-			if header > 0 {
-				html += fmt.Sprintf("</h%d>", header)
-				header = 0
-			}
-			pos++
+		if list {
+			html += "</ul>"
+			list = false
+		}
+		if g := headingRegexp.FindStringSubmatch(line); g != nil {
+			tag := fmt.Sprintf("h%d", len(g[1]))
+			html += "<" + tag + ">" + g[2] + "</" + tag + ">"
 			continue
 		}
-		html += string(char)
-		pos++
-		if pos >= len(markdown) {
-			break
-		}
+		html += "<p>" + line + "</p>"
 	}
-	switch {
-	case header == 7:
-		return html + "</p>"
-	case header > 0:
-		return html + fmt.Sprintf("</h%d>", header)
+	if list {
+		html += "</ul>"
 	}
-	if list > 0 {
-		return html + "</li></ul>"
-	}
-	if strings.Contains(html, "<p>") {
-		return html + "</p>"
-	}
-	return "<p>" + html + "</p>"
+	return html
+}
 
+var strongRegexp = regexp.MustCompile("__(.*?)__")
+var emRegexp = regexp.MustCompile("_(.*?)_")
+
+func replaceInlineElements(markdown string) string {
+	markdown = strongRegexp.ReplaceAllString(markdown, "<strong>$1</strong>")
+	markdown = emRegexp.ReplaceAllString(markdown, "<em>$1</em>")
+	return markdown
 }
